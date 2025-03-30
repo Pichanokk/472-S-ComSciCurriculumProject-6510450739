@@ -22,6 +22,15 @@ jobs:
       matrix:
         python-version: ["3.10"]
 
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        ports:
+          - 3306:3306
+
     steps:
       - uses: actions/checkout@v4
 
