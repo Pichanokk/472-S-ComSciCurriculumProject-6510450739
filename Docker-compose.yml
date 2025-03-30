@@ -1,4 +1,42 @@
 services:
+  backend:
+    container_name: cs_curriculum_backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - minio
+    networks:
+      - backend
+      - frontend
+    environment:
+      - DB_NAME=cs_curriculum
+      - DB_USER=root
+      - DB_PASSWORD=1234
+      - DB_HOST=db
+      - DB_PORT=3306
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_ENDPOINT=cs_curriculum_minio:9000
+      - MINIO_BUCKET=cs-curriculum
+      - EMAIL_HOST_USER=giftmeonetime@gmail.com
+      - EMAIL_HOST_PASSWORD=tcgwpqheiqzzhmyn
+
+  frontend:
+    container_name: cs_curriculum_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - frontend
+
   minio:
     container_name: cs_curriculum_minio
     image: minio/minio
@@ -10,6 +48,9 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+    networks:
+      - backend
+
   db:
     container_name: cs_curriculum
     image: mysql:latest
@@ -20,6 +61,9 @@ services:
       - "3306:3306"
     volumes:
       - csc_db_data:/var/lib/mysql
+    networks: 
+      - backend
+
   phpmyadmin:
     container_name: cs_curriculum_phpmyadmin
     image: phpmyadmin/phpmyadmin:latest
@@ -31,6 +75,14 @@ services:
       - "8080:80"
     depends_on:
       - db
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
 
 volumes:
   csc_db_data:
