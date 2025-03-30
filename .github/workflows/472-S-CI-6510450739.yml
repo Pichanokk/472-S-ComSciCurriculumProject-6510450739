@@ -1,0 +1,70 @@
+name: Develop Branch CI
+
+permissions:
+  contents: read
+  pull-requests: write
+
+run-name: ${{ github.actor }} is running CI on develop branch 🚀
+
+on:
+  push:
+    branches: 
+      - develop
+  pull_request: 
+    branches: 
+      - develop
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run docker compose
+        uses: hoverkraft-tech/compose-action@v2.0.1
+        with:
+          compose-file: "./Docker-compose.yml"
+
+      - name: Copy environment
+        run: cp .env.example ./backend/.env
+
+      - name: Install Dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirement.txt
+
+      - name: Run Tests
+        working-directory: ./backend
+        run: |
+          pytest
+
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      FRONTEND_APP_NAME: "devops-CI-frontend"
+      BACKEND_APP_NAME: "devops-CI-backend"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build frontend container
+        working-directory: ./frontend
+        run: |
+          docker build -t ${{ env.FRONTEND_APP_NAME }} ./
+
+      - name: Build backend container
+        working-directory: ./backend
+        run: |
+          docker build -t ${{ env.BACKEND_APP_NAME }} ./
