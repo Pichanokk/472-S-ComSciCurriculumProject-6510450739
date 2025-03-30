@@ -20,8 +20,6 @@ COPY . .
 
 RUN cp -n ../.env.example .env || true
 
-COPY .env .
-
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir -r requirement.txt
 
